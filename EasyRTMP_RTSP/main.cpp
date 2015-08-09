@@ -8,10 +8,8 @@
 #include <stdio.h>
 #include "EasyRTMPAPI.h"
 #include "EasyNVSourceAPI.h"
-#include <winsock2.h>
 
-
-#define RTSPURL "rtsp://admin:admin@192.168.1.106/"
+#define RTSPURL "rtsp://admin:admin@192.168.1.106/22"
 
 #define SRTMP "rtmp://121.40.50.44/oflaDemo/aaa"
 
@@ -29,6 +27,7 @@ int CALLBACK __NVSourceCallBack( int _chid, int *_chPtr, int _mediatype, char *p
 	}
 	bool bRet = false;
 
+	//目前只处理视频
 	if (_mediatype == MEDIA_TYPE_VIDEO)
 	{
 		tsTimeStampMSsec += 40;
@@ -76,16 +75,16 @@ int CALLBACK __NVSourceCallBack( int _chid, int *_chPtr, int _mediatype, char *p
 
 int main()
 {
-
-	//创建NVSource
+	//创建EasyNVSource
 	EasyNVS_Init(&fNVSHandle);
-
 	if (NULL == fNVSHandle) return 0;
 
 	unsigned int mediaType = MEDIA_TYPE_VIDEO;
 	//mediaType |= MEDIA_TYPE_AUDIO;	//换为NVSource, 屏蔽声音
 
+	//设置数据回调
 	EasyNVS_SetCallback(fNVSHandle, __NVSourceCallBack);
+	//打开RTSP网络串流
 	EasyNVS_OpenStream(fNVSHandle, 0, RTSPURL, RTP_OVER_TCP, mediaType, 0, 0, NULL, 1000, 0);
 
 	while(1)
@@ -93,10 +92,13 @@ int main()
 		Sleep(10);	
 	};
 
+	//是否RTMP推送
     EasyRTMP_Session_Release(rtmpHandle);
     rtmpHandle = 0;
    
+	//关闭EasyNVSource拉取
 	EasyNVS_CloseStream(fNVSHandle);
+	//释放EasyNVSource
 	EasyNVS_Deinit(&fNVSHandle);
 	fNVSHandle = NULL;
 
