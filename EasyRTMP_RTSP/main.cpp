@@ -9,9 +9,9 @@
 #include "EasyRTMPAPI.h"
 #include "EasyNVSourceAPI.h"
 
-#define RTSPURL "rtsp://admin:admin@192.168.1.106/22"
+#define RTSPURL "rtsp://admin:admin@192.168.1.108/cam/realmonitor?channel=1&subtype=1"
 
-#define SRTMP "rtmp://121.40.50.44/oflaDemo/aaa"
+#define SRTMP "rtmp://127.0.0.1/oflaDemo/bbb"
 
 Easy_RTMP_Handle rtmpHandle = 0;
 Easy_NVS_Handle fNVSHandle = 0;
@@ -49,23 +49,34 @@ int CALLBACK __NVSourceCallBack( int _chid, int *_chPtr, int _mediatype, char *p
 					bRet = EasyRTMP_InitMetadata(rtmpHandle, (const char*)pbuf+4,
 						frameinfo->reserved1-4, (const char*)pbuf+frameinfo->reserved1+4 ,
 						frameinfo->reserved2 - frameinfo->reserved1 -4, 25, 8000);
-					if (!bRet)
+					if (bRet)
 					{
 						printf("Fail to InitMetadata ...\n");
 					}
 				}
-				bRet = EasyRTMP_SendH264Packet(rtmpHandle, (unsigned char*)pbuf+frameinfo->reserved2+4, frameinfo->length-frameinfo->reserved2-4, true, tsTimeStampMSsec);
+				bRet = EasyRTMP_SendH264Packet(rtmpHandle, (unsigned char*)pbuf+frameinfo->reserved2+4, frameinfo->length-frameinfo->reserved2-4, true, (frameinfo->rtptimestamp)/90);
 				if (!bRet)
 				{
 					printf("Fail to EasyRTMP_SendH264Packet(I-frame) ...\n");
 				}
+				else
+				{
+					printf("I");
+				}
 			}
 			else
 			{
-				bRet = EasyRTMP_SendH264Packet(rtmpHandle, (unsigned char*)pbuf+4, frameinfo->length-4, false, tsTimeStampMSsec);
-				if (!bRet)
+				if(rtmpHandle)
 				{
-					printf("Fail to EasyRTMP_SendH264Packet(P-frame) ...\n");
+					bRet = EasyRTMP_SendH264Packet(rtmpHandle, (unsigned char*)pbuf+4, frameinfo->length-4, false, (frameinfo->rtptimestamp)/90);
+					if (!bRet)
+					{
+						printf("Fail to EasyRTMP_SendH264Packet(P-frame) ...\n");
+					}
+					else
+					{
+						printf("P");
+					}
 				}
 			}				
 		}	
