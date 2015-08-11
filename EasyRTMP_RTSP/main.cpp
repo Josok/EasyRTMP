@@ -12,11 +12,10 @@
 
 #define RTSPURL "rtsp://admin:admin@192.168.1.108/cam/realmonitor?channel=1&subtype=1"
 
-#define SRTMP "rtmp://127.0.0.1/oflaDemo/live"
+#define SRTMP "rtmp://www.easydss.com/oflaDemo/rtsp"
 
 Easy_RTMP_Handle rtmpHandle = 0;
 Easy_NVS_Handle fNVSHandle = 0;
-static unsigned int tsTimeStampMSsec = 0;
 
 /* NVSource从RTSPClient获取数据后回调给上层 */
 int Easy_APICALL __NVSourceCallBack( int _chid, int *_chPtr, int _mediatype, char *pbuf, NVS_FRAME_INFO *frameinfo)
@@ -31,7 +30,6 @@ int Easy_APICALL __NVSourceCallBack( int _chid, int *_chPtr, int _mediatype, cha
 	//目前只处理视频
 	if (_mediatype == MEDIA_TYPE_VIDEO)
 	{
-		tsTimeStampMSsec += 40;
 		if(frameinfo && frameinfo->length)
 		{
 			if( frameinfo->type == FRAMETYPE_I)
