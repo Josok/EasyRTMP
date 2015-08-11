@@ -49,10 +49,49 @@ HI_S32 NETSDK_APICALL OnStreamCallback(HI_U32 u32Handle, /* 句柄 */
 
 		if (pstruAV->u32AVFrameFlag == HI_NET_DEV_VIDEO_FRAME_FLAG)
 		{
-			int spsOffset, ppsOffset, idrOffset = 0;
+			int spsOffset = 0, ppsOffset = 0, idrOffset = 0;
 
 			if( pstruAV->u32VFrameType == HI_NET_DEV_VIDEO_FRAME_I)
 			{
+				char* pbuf = (char*)(pu8Buffer + sizeof(HI_S_AVFrame));
+
+				for(int i=0; (i<pstruAV->u32AVFrameLen) && (pstruAV->u32AVFrameLen-i > 5); i++)
+				{
+					unsigned char naltype = ( (unsigned char)pbuf[i+4] & 0x1F);
+					if (	spsOffset == 0	&&
+							(unsigned char)pbuf[i]== 0x00 && 
+							(unsigned char)pbuf[i+1]== 0x00 && 
+							(unsigned char)pbuf[i+2] == 0x00 &&
+							(unsigned char)pbuf[i+3] == 0x01 &&
+							(naltype==0x07) )
+					{
+						spsOffset = i;
+						continue;
+					}
+
+					if (	ppsOffset == 0	&&
+							(unsigned char)pbuf[i]== 0x00 && 
+							(unsigned char)pbuf[i+1]== 0x00 && 
+							(unsigned char)pbuf[i+2] == 0x00 &&
+							(unsigned char)pbuf[i+3] == 0x01 &&
+							(naltype==0x08) )
+					{
+						ppsOffset = i;
+						continue;
+					}
+
+					if (	idrOffset == 0	&&
+					(unsigned char)pbuf[i]== 0x00 && 
+					(unsigned char)pbuf[i+1]== 0x00 && 
+					(unsigned char)pbuf[i+2] == 0x00 &&
+					(unsigned char)pbuf[i+3] == 0x01 &&
+					(naltype==0x05) )
+					{
+						idrOffset = i;
+						break;
+					}
+				}
+
 				/* 关键帧是SPS、PPS、IDR(均包含00 00 00 01)的组合 */
 				if(rtmpHandle == 0)
 				{
@@ -77,7 +116,7 @@ HI_S32 NETSDK_APICALL OnStreamCallback(HI_U32 u32Handle, /* 句柄 */
 				}
 				bRet = EasyRTMP_SendH264Packet(rtmpHandle, 
 					(unsigned char*)pu8Buffer+sizeof(HI_S_AVFrame) + idrOffset + 4,
-					pstruAV->u32AVFrameLen - sizeof(HI_S_AVFrame) - idrOffset - 4, 
+					pstruAV->u32AVFrameLen - idrOffset - 4, 
 					true, 
 					pstruAV->u32AVFramePTS);
 				if (!bRet)
@@ -95,7 +134,7 @@ HI_S32 NETSDK_APICALL OnStreamCallback(HI_U32 u32Handle, /* 句柄 */
 				{
 					bRet = EasyRTMP_SendH264Packet(rtmpHandle,
 						(unsigned char*)pu8Buffer+sizeof(HI_S_AVFrame)+4,
-						pstruAV->u32AVFrameLen - sizeof(HI_S_AVFrame) -4, 
+						pstruAV->u32AVFrameLen - 4, 
 						false, 
 						pstruAV->u32AVFramePTS);
 					if (!bRet)
