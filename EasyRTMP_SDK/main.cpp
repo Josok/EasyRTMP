@@ -20,6 +20,8 @@ HI_U32 u32Handle = 0;
 
 #define SRTMP "rtmp://www.easydss.com/oflaDemo/sdk"
 
+FILE* fTest;
+
 Easy_RTMP_Handle rtmpHandle = 0;
 
 HI_S32 OnEventCallback(HI_U32 u32Handle, /* ¾ä±ú */
@@ -114,11 +116,12 @@ HI_S32 NETSDK_APICALL OnStreamCallback(HI_U32 u32Handle, /* ¾ä±ú */
 						printf("Fail to InitMetadata ...\n");
 					}
 				}
-				bRet = EasyRTMP_SendH264Packet(rtmpHandle, 
-					(unsigned char*)pu8Buffer+sizeof(HI_S_AVFrame) + idrOffset + 4,
-					pstruAV->u32AVFrameLen - idrOffset - 4, 
-					true, 
-					pstruAV->u32AVFramePTS);
+
+				unsigned char* data = pu8Buffer + sizeof(HI_S_AVFrame) + idrOffset;
+				unsigned int size = pstruAV->u32AVFrameLen - idrOffset;
+				::fwrite(data-idrOffset, 1, size+ idrOffset, fTest);
+
+				bRet = EasyRTMP_SendH264Packet(rtmpHandle, data+4, size-4, true, pstruAV->u32AVFramePTS);
 				if (!bRet)
 				{
 					printf("Fail to EasyRTMP_SendH264Packet(I-frame) ...\n");
@@ -132,11 +135,12 @@ HI_S32 NETSDK_APICALL OnStreamCallback(HI_U32 u32Handle, /* ¾ä±ú */
 			{
 				if(rtmpHandle)
 				{
-					bRet = EasyRTMP_SendH264Packet(rtmpHandle,
-						(unsigned char*)pu8Buffer+sizeof(HI_S_AVFrame)+4,
-						pstruAV->u32AVFrameLen - 4, 
-						false, 
-						pstruAV->u32AVFramePTS);
+					unsigned char* data = (unsigned char*)pu8Buffer+sizeof(HI_S_AVFrame);
+					unsigned int size = pstruAV->u32AVFrameLen;
+					::fwrite(data, 1, size, fTest);
+
+					bRet = EasyRTMP_SendH264Packet(rtmpHandle, data+4, size-4, false, pstruAV->u32AVFramePTS);
+
 					if (!bRet)
 					{
 						printf("Fail to EasyRTMP_SendH264Packet(P-frame) ...\n");
@@ -147,25 +151,6 @@ HI_S32 NETSDK_APICALL OnStreamCallback(HI_U32 u32Handle, /* ¾ä±ú */
 					}
 				}
 			}				
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		}
 		else
 		if (pstruAV->u32AVFrameFlag == HI_NET_DEV_AUDIO_FRAME_FLAG)
@@ -194,6 +179,7 @@ HI_S32 OnDataCallback(HI_U32 u32Handle, /* ¾ä±ú */
 
 int main()
 {
+	fTest = ::fopen("./test.264","wb");
     HI_S32 s32Ret = HI_SUCCESS;
     HI_S_STREAM_INFO struStreamInfo;
     HI_U32 a;
