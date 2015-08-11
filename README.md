@@ -7,7 +7,7 @@ EasyRTMP是一个EasyDarwin配套使用，也可以单独使用的RTMP推送库�
 
 - **EasyRTMP_RTSP**：将RTSP/RTP数据获取到本地，再通过EasyRTMP推送到RTMP服务器；
 
-- **EasyRTMP_SDK**：将自己SDK回调的数据推送给RTMP服务器；
+- **EasyRTMP_SDK**：将SDK回调的数据进行RTMP推送，示例中的SDK是我们EasyCamera开源摄像机的配套库，EasyCamera开源摄像机硬件可以在：[https://easydarwin.taobao.com/](https://easydarwin.taobao.com/ "EasyCamera")购买，EasyCamera SDK及配套源码可在 [http://www.easydarwin.org](http://www.easydarwin.org "EasyDarwin") 或者 [https://github.com/EasyDarwin/EasyCamera](https://github.com/EasyDarwin/EasyCamera "EasyCamera")获取到；
 
 
 ### 调用过程
